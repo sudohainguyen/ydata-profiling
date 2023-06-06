@@ -85,16 +85,21 @@ def describe_numeric_1d_spark(
     quantiles = config.vars.num.quantiles
     quantile_threshold = 0.05
 
+    if summary["n_missing"] == df.count():
+        percentile_stats = [0 for _ in quantiles]
+    else:
+        percentile_stats = df.stat.approxQuantile(
+            f"{df.columns[0]}",
+            quantiles,
+            quantile_threshold,
+        )
+
     summary.update(
         {
             f"{percentile:.0%}": value
             for percentile, value in zip(
                 quantiles,
-                df.stat.approxQuantile(
-                    f"{df.columns[0]}",
-                    quantiles,
-                    quantile_threshold,
-                ),
+                percentile_stats,
             )
         }
     )

@@ -1,6 +1,7 @@
 from typing import Tuple
 
 from pyspark.sql import DataFrame
+import pyspark.sql.functions as F
 
 from ydata_profiling.config import Settings
 from ydata_profiling.model.summary_algorithms import describe_counts
@@ -22,8 +23,14 @@ def describe_counts_spark(
     value_counts = series.groupBy(series.columns).count()
     value_counts = value_counts.sort("count", ascending=False).persist()
     value_counts_index_sorted = value_counts.sort(series.columns[0], ascending=True)
-
-    n_missing = value_counts.where(value_counts[series.columns[0]].isNull()).first()
+    if series.dtypes[0][1] in ("timestamp", "date"):
+        n_missing = value_counts.where(
+            value_counts[series.columns[0]].isNull()
+        ).first()
+    else:
+        n_missing = value_counts.where(
+            F.isnan(value_counts[series.columns[0]])
+        ).first()
     if n_missing is None:
         n_missing = 0
     else:

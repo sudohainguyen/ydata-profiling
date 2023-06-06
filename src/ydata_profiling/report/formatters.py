@@ -244,6 +244,8 @@ def fmt_numeric(value: float, precision: int = 10) -> str:
     Returns:
         The numeric value with the given precision.
     """
+    if value is None:
+        return "NaN"
     fmtted = f"{{:.{precision}g}}".format(value)
     for v in ["e+", "e-"]:
         if v in fmtted:
